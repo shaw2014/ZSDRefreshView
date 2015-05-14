@@ -7,15 +7,10 @@
 //
 
 #import "ZSDRefreshBaseView.h"
-#import "ZSDRefreshCircleView.h"
 
 #define kArrowSize CGSizeMake(22.0f,22.0f)
 
 @interface ZSDRefreshBaseView ()
-
-@property (nonatomic,strong) UIImageView *backgroundImageView;
-@property (nonatomic,strong) ZSDRefreshCircleView *arrowCircleView;
-@property (nonatomic,strong) UILabel *textLabel;
 
 @end
 
@@ -27,14 +22,12 @@
     if(self)
     {
         frame.size.width = [UIScreen mainScreen].bounds.size.width;
-        frame.size.height = kRefreshViewHeight;
+        frame.size.height = kRefreshHeaderHeight;
         self.frame = frame;
         
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         
         [self setup];
-        
-        self.state = ZSDRefreshStateNormal;
     }
     
     return self;
@@ -44,15 +37,15 @@
 {
     if(!_backgroundImageView)
     {
-        _backgroundImageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, self.bounds.size.width, kRefreshViewHeight)];
-        _backgroundImageView.image = [UIImage imageNamed:@"refreshBG"];
+        _backgroundImageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, self.bounds.size.width, kRefreshHeaderHeight)];
+        _backgroundImageView.image = [UIImage imageNamed:@"pic_head_refresh_text"];
         [self addSubview:_backgroundImageView];
     }
     
     if(!_arrowCircleView)
     {
         _arrowCircleView = [[ZSDRefreshCircleView alloc]initWithFrame:CGRectMake(CGRectGetMidX(self.frame) - 80.0f, 50.0f, kArrowSize.width, kArrowSize.height)];
-        _arrowCircleView.image = [UIImage imageNamed:@"arrow"];
+        _arrowCircleView.image = [UIImage imageNamed:@"ico_bottom_arrow"];
         [self addSubview:_arrowCircleView];
     }
     
@@ -64,6 +57,8 @@
         _textLabel.textColor = [UIColor grayColor];
         [self addSubview:_textLabel];
     }
+    
+    self.state = ZSDRefreshStateNormal;
 }
 
 -(void)willMoveToSuperview:(UIView *)newSuperview
@@ -85,7 +80,8 @@
 - (void)settingLabelText
 {
     // 设置文字
-    switch (self.state) {
+    switch (self.state)
+    {
         case ZSDRefreshStateNormal:
         case ZSDRefreshStatePulling:
             self.textLabel.text = @"下拉刷新...";
@@ -106,8 +102,11 @@
     if(_scrollView.isDragging && state == ZSDRefreshStatePulling)
     {
         CGFloat offset = _scrollView.contentOffset.y - _scrollViewOriginalInset.top;
-        _arrowCircleView.progress = MIN(-offset / kRefreshViewHeight, 1);
-        [_arrowCircleView setNeedsDisplay];
+        
+        if(_arrowCircleView.isHidden == NO)
+        {
+            _arrowCircleView.progress = MIN(-offset / kRefreshHeaderHeight, 1);
+        }
     }
     
     if(_state != state)
@@ -117,13 +116,16 @@
             _scrollViewOriginalInset = self.scrollView.contentInset;
         }
         
-        switch (state) {
+        switch (state)
+        {
             case ZSDRefreshStateNormal:
             {
-                _arrowCircleView.progress = 0;
-                [_arrowCircleView setNeedsDisplay];
-                
-                [_arrowCircleView stopAnimation];
+                if(_arrowCircleView.isHidden == NO)
+                {
+                    _arrowCircleView.progress = 0;
+                    
+                    [_arrowCircleView stopAnimation];
+                }
             }
                 break;
             case ZSDRefreshStatePulling:
@@ -133,10 +135,12 @@
                 break;
             case ZSDRefreshStateRefreshing:
             {
-                _arrowCircleView.progress = 1;
-                [_arrowCircleView setNeedsDisplay];
-                
-                [_arrowCircleView startAnimation];
+                if(_arrowCircleView.isHidden == NO)
+                {
+                    _arrowCircleView.progress = 1;
+                    
+                    [_arrowCircleView startAnimation];
+                }
                 
                 if(_beginRefreshCallback)
                 {
@@ -159,21 +163,22 @@
 #pragma mark 开始刷新
 - (void)beginRefresh
 {
-    if (self.state == ZSDRefreshStateRefreshing) {
+    if (self.state == ZSDRefreshStateRefreshing)
+    {
         if (_beginRefreshCallback) {
             _beginRefreshCallback();
         }
-    } else {
-        if (self.window) {
-            self.state = ZSDRefreshStateRefreshing;
-        }
+    }
+    else
+    {
+        self.state = ZSDRefreshStateRefreshing;
     }
 }
 
 #pragma mark 结束刷新
 - (void)endRefresh
 {
-    double delayInSeconds = 0.3;
+    double delayInSeconds = 0.3f;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         self.state = ZSDRefreshStateNormal;

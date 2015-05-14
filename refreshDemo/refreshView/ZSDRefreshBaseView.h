@@ -7,9 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ZSDRefreshCircleView.h"
 
-#define kRefreshViewHeight 100.0f
+#define kRefreshHeaderHeight 100.0f
+#define kRefreshFooterHeight 80.0f
 #define kOffsetObserveKey @"contentOffset"
+#define kContentSizeObserveKey @"contentSize"
 
 typedef NS_ENUM(NSInteger, ZSDRefreshState)
 {
@@ -22,12 +25,19 @@ typedef NS_ENUM(NSInteger, ZSDRefreshState)
 
 @interface ZSDRefreshBaseView : UIView
 
+@property (nonatomic,strong,readonly) UILabel *textLabel;
+@property (nonatomic,strong,readonly) UIImageView *backgroundImageView;
+@property (nonatomic,strong,readonly) ZSDRefreshCircleView *arrowCircleView;
+
 @property (nonatomic,weak,readonly) UIScrollView *scrollView;
 @property (nonatomic,assign,readonly) UIEdgeInsets scrollViewOriginalInset;
 
 @property (nonatomic,assign) ZSDRefreshState state;
+@property (nonatomic,assign) BOOL isInitFooter;
 
 @property (nonatomic,copy) void (^beginRefreshCallback)();
+
+- (void)settingLabelText;
 
 -(void)beginRefresh;
 -(void)endRefresh;

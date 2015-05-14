@@ -8,11 +8,13 @@
 
 #import "UIScrollView+ZSDRefresh.h"
 #import "ZSDRefreshHeadView.h"
+#import "ZSDRefreshFootView.h"
 #import <objc/runtime.h>
 
 @interface UIScrollView()
 
 @property (weak, nonatomic) ZSDRefreshHeadView *header;
+@property (weak, nonatomic) ZSDRefreshFootView *footer;
 
 @end
 
@@ -20,6 +22,7 @@
 
 #pragma mark - 运行时相关
 static char ZSDRefreshHeaderViewKey;
+static char ZSDRefreshFooterViewKey;
 
 - (void)setHeader:(ZSDRefreshHeadView *)header {
     [self willChangeValueForKey:@"ZSDRefreshHeaderViewKey"];
@@ -33,12 +36,24 @@ static char ZSDRefreshHeaderViewKey;
     return objc_getAssociatedObject(self, &ZSDRefreshHeaderViewKey);
 }
 
+- (void)setFooter:(ZSDRefreshFootView *)footer {
+    [self willChangeValueForKey:@"ZSDRefreshFooterViewKey"];
+    objc_setAssociatedObject(self, &ZSDRefreshFooterViewKey,
+                             footer,
+                             OBJC_ASSOCIATION_ASSIGN);
+    [self didChangeValueForKey:@"ZSDRefreshFooterViewKey"];
+}
+
+- (ZSDRefreshHeadView *)footer {
+    return objc_getAssociatedObject(self, &ZSDRefreshFooterViewKey);
+}
+
 /**
  *  添加一个下拉刷新头部控件
  *
  *  @param callback 回调
  */
-- (void)addHeaderWithCallback:(void (^)())callback
+- (void)addHeadWithCallback:(void (^)())callback
 {
     // 1.创建新的header
     if (!self.header) {
@@ -54,7 +69,7 @@ static char ZSDRefreshHeaderViewKey;
 /**
  *  主动让下拉刷新头部控件进入刷新状态
  */
-- (void)headerBeginRefreshing
+- (void)headBeginRefreshing
 {
     [self.header beginRefresh];
 }
@@ -62,9 +77,42 @@ static char ZSDRefreshHeaderViewKey;
 /**
  *  让下拉刷新头部控件停止刷新状态
  */
-- (void)headerEndRefreshing
+- (void)headEndRefreshing
 {
     [self.header endRefresh];
+}
+
+- (BOOL)isHeadRefreshing
+{
+    return self.header.state == ZSDRefreshStateRefreshing;
+}
+
+-(void)addFootWithCallback:(void (^)())callback
+{
+    // 1.创建新的footer
+    if (!self.footer) {
+        ZSDRefreshFootView *footer = [ZSDRefreshFootView footer];
+        [self addSubview:footer];
+        self.footer = footer;
+    }
+    
+    // 2.设置block回调
+    self.footer.beginRefreshCallback = callback;
+}
+
+-(void)footBeginRefreshing
+{
+    [self.footer beginRefresh];
+}
+
+-(void)footEndRefreshing
+{
+    [self.footer endRefresh];
+}
+
+- (BOOL)isFootRefreshing
+{
+    return self.footer.state == ZSDRefreshStateRefreshing;
 }
 
 @end

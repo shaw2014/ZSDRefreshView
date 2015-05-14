@@ -105,7 +105,9 @@
                 if(oldState == ZSDRefreshStateRefreshing)
                 {
                     [UIView animateWithDuration:0.3f animations:^{
-                        self.scrollView.contentInset = UIEdgeInsetsZero;
+                        UIEdgeInsets inset = self.scrollView.contentInset;
+                        inset.top -= self.bounds.size.height;
+                        self.scrollView.contentInset = inset;
                     }];
                 }
             }
